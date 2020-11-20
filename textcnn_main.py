@@ -4,8 +4,8 @@ import torch
 import torch.autograd as autograd
 import torch.nn as nn
 import torch.optim as optim
-from com.study.torch_model.TextCNN import TextCNN
-from com.study.data.MR_Dataset import MR_Dataset
+from torch_model.TextCNN import TextCNN
+from data.MR_Dataset import MR_Dataset
 import numpy as np
 
 import config as argumentparser
