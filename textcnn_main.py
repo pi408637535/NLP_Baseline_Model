@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from com.pytorchtools import EarlyStopping
+from pytorchtools import EarlyStopping
 import torch
 import torch.autograd as autograd
 import torch.nn as nn
@@ -8,7 +8,7 @@ from com.study.torch_model.TextCNN import TextCNN
 from com.study.data.MR_Dataset import MR_Dataset
 import numpy as np
 
-from com import config as argumentparser
+import config as argumentparser
 
 config = argumentparser.ArgumentParser()
 config.filters = list(map(int,config.filters.split(",")))
