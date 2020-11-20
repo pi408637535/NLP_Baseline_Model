@@ -1,8 +1,8 @@
 import torch as t
 import torch.nn as nn
+from torch_model.BasicModule import BasicModule
 
-
-class TextCNN(nn.Module):
+class TextCNN(BasicModule):
     def __init__(self, config):
         super(TextCNN, self).__init__()
 

@@ -5,6 +5,7 @@ import torch.autograd as autograd
 import torch.nn as nn
 import torch.optim as optim
 from torch_model.TextCNN import TextCNN
+
 from data.MR_Dataset import MR_Dataset
 import numpy as np
 

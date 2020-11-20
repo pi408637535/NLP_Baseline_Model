@@ -14,3 +14,4 @@ buildNumber.properties
 *.txt
 *.local
 *.conf
+*.pt
