@@ -2,6 +2,8 @@ import torch as t
 import torch.nn as nn
 from torch_model.BasicModule import BasicModule
 
+'''
+# orininal textcnn
 class TextCNN(BasicModule):
     def __init__(self, config):
         super(TextCNN, self).__init__()
@@ -59,6 +61,45 @@ class TextCNN(BasicModule):
 
 
         return self.fc(total_max_pool)
+'''
 
 
+class TextCNN(BasicModule):
+    def __init__(self, config):
+        super(TextCNN, self).__init__()
 
+        if config.embedding_pretrained is not None:
+            self.embedding = nn.Embedding.from_pretrained(config.embedding_pretrained, freeze=False)
+        else:
+            self.embedding = nn.Embedding(config.n_vocab, config.embed_size)
+
+        self.convs = [ nn.Conv2d(1, config.filter_num,
+                                 kernel_size =(filter, config.embed_size)) for filter in config.filters ]
+
+        self.max_pools = [ nn.MaxPool1d(kernel_size=config.sentence_max_size - filter + 1)
+                           for filter in config.filters ]
+
+        self.fc = nn.Linear(len(config.filters) * config.filter_num, config.label_num)
+
+    @staticmethod
+    def conv_max_pool(text, convs, max_pools):
+        conv1d_text = [ t.squeeze(conv(text), dim=-1) for conv in convs]
+        max_pool_text = [ t.squeeze(max_pool(conv1d_text[index]), dim=-1) for index,max_pool in enumerate(max_pools) ]
+        return max_pool_text
+
+
+    def forward(self, text):
+        # text: batch,seq
+        embed = self.embedding(text)
+
+        # embed： batch,seq,embed
+        embed = t.unsqueeze(embed, dim=1)
+
+        conv_max_pool_res = self.conv_max_pool(embed, self.convs, self.max_pools)
+        # max_pool_0: batch, filter
+        total_max_pool = t.cat(conv_max_pool_res, dim=-1)
+
+        # total_max_pool : batch, filter_num * len(config.filters)
+        total_max_pool = self.dropout(total_max_pool)
+
+        return self.fc(total_max_pool)
