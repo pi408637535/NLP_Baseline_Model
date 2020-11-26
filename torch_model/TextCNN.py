@@ -95,6 +95,7 @@ class TextCNN(BasicModule):
         # embed： batch,seq,embed
         embed = t.unsqueeze(embed, dim=1)
 
+
         conv_max_pool_res = self.conv_max_pool(embed, self.convs, self.max_pools)
         # max_pool_0: batch, filter
         total_max_pool = t.cat(conv_max_pool_res, dim=-1)
