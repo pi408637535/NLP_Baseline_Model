@@ -7,9 +7,9 @@ import pickle
 from collections import Counter
 class iwslt_Data(data.DataLoader):
     def __init__(self,source_data_name="train.tags.de-en.de",target_data_name="train.tags.de-en.en",source_vocab_size = 30000, target_vocab_size = 30000):
-        self.path = os.path.abspath("iwslt14")
-        if "data" not in self.path:
-            self.path += "/data"
+        self.path = os.path.abspath("data")
+        # if "iwslt14" not in self.path:
+        #     self.path += "/iwslt14"
         self.source_data_name = source_data_name
         self.target_data_name = target_data_name
         self.source_vocab_size = source_vocab_size
@@ -27,8 +27,12 @@ class iwslt_Data(data.DataLoader):
         target_data = []
         for i in range(len(raw_source_data)):
             if raw_target_data[i]!="" and raw_source_data[i]!="" and raw_source_data[i][0]!="<" and raw_target_data[i][0]!="<":
-                source_sentence = nltk.word_tokenize(raw_source_data[i],language="german")
-                target_sentence = nltk.word_tokenize(raw_target_data[i],language="english")
+                # source_sentence = nltk.word_tokenize(raw_source_data[i],language="german")
+                # target_sentence = nltk.word_tokenize(raw_target_data[i],language="english")
+
+                source_sentence = [ele.lower() for ele in  raw_source_data[i].split(" ")]
+                target_sentence = [ ele.lower() for ele in raw_target_data[i].split(" ")]
+
                 if len(source_sentence)<=100 and len(target_sentence)<=100:
                     source_data.append(source_sentence)
                     target_data.append(target_sentence)

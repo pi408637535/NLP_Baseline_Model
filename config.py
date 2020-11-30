@@ -20,5 +20,15 @@ def ArgumentParser():
     parser.add_argument("--embedding_type",type=str,default="word2vec",help="word2vec or glove or no")
     parser.add_argument("--sentence_max_size", type=int, default=10, help="sentence_max_size")
 
+
+    # seq2seq
+    parser.add_argument("--source_vocab_size", type=int, default=30000, help="source_vocab_size")
+    parser.add_argument("--target_vocab_size", type=int, default=30000, help="source_vocab_size")
+    parser.add_argument("--source_length", type=int, default=100, help="source_length")
+    parser.add_argument("--target_length", type=int, default=100, help="target_length")
+    parser.add_argument("--lstm_size", type=int, default=256, help="lstm_size")
+    parser.add_argument("--max_length", type=int, default=100, help="max_length")
+    parser.add_argument("--vacab_size", type=int, default=178526, help="vacab_size")
+
     parser.embedding_pretrained = None
     return parser.parse_args()
