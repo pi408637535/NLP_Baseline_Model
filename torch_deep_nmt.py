@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from pytorchtools import EarlyStopping
 import torch
+import torch as t
 import torch.autograd as autograd
 import torch.nn as nn
 import torch.optim as optim
@@ -115,11 +116,14 @@ if __name__ == '__main__':
                                             shuffle=True,
                                             num_workers=0)
     model = DeepNMT(config)
+    criterion = LMLoss()
     if config.cuda and torch.cuda.is_available():
         model.cuda()
-    criterion = LMLoss()
+        criterion.cuda()
+
     optimizer = optim.Adam(model.parameters(), lr=config.learning_rate)
     target_id2word = dict([[x[1], x[0]] for x in training_set.target_word2id.items()])
+    loss = -1
 
     for epoch in range(config.epoch):
         model.train()
@@ -138,9 +142,10 @@ if __name__ == '__main__':
                 target_data = torch.autograd.Variable(target_data).squeeze()
                 out = model(source_data, target_data_input)
 
+                # max_length = target_data.shape[0]
+                # t.arange(max_length)
+
                 loss_now = criterion(target_data, out)
-                weights = target_data.view(-1) != 0
-                loss_now = torch.sum((loss_now * weights.float())) / torch.sum(weights.float())
                 if loss == -1:
                     loss = loss_now.data.item()
                 else:

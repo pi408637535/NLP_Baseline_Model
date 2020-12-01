@@ -28,7 +28,6 @@ def ArgumentParser():
     parser.add_argument("--target_length", type=int, default=100, help="target_length")
     parser.add_argument("--lstm_size", type=int, default=256, help="lstm_size")
     parser.add_argument("--max_length", type=int, default=100, help="max_length")
-    parser.add_argument("--vacab_size", type=int, default=178526, help="vacab_size")
 
     parser.embedding_pretrained = None
     return parser.parse_args()
