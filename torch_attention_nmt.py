@@ -5,7 +5,8 @@ import torch as t
 import torch.autograd as autograd
 import torch.nn as nn
 import torch.optim as optim
-from torch_model.Deep_NMT_model import DeepNMT,LMLoss
+from torch_model.Deep_NMT_model import LMLoss
+from torch_model.Attention_NMT import AttentionNMT
 
 from data.iwslt_Data_Loader import iwslt_Data
 import numpy as np
@@ -115,7 +116,7 @@ if __name__ == '__main__':
                                             batch_size=config.batch_size,
                                             shuffle=True,
                                             num_workers=0)
-    model = DeepNMT(config)
+    model = AttentionNMT(config)
     criterion = LMLoss()
     if config.cuda and torch.cuda.is_available():
         model.cuda()
