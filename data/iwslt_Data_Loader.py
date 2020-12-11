@@ -1,7 +1,6 @@
 #coding:utf-8
 from torch.utils import data
 import os
-import nltk
 import numpy as np
 import pickle
 from collections import Counter
