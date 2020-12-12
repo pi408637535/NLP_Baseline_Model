@@ -63,7 +63,7 @@ class AttentionNMT(BasicModule):
 
 
 
-    def forward(self, source_text, target_text_input, mode = "train", is_gpu = False):
+    def forward(self, source_text, target_text_input, mode = "train", is_gpu = True):
         #source_text:batch,seq
         source_embed = self.source_embedding(source_text)
 
