@@ -71,8 +71,6 @@ class AttentionNMT(BasicModule):
         #enc_hidden: h: layer * dir, batch, hidden ： 2, batch, hidden
         source_output,enc_hidden = self.encoder(source_embed)
 
-        #target_embed: batch,seq,embed
-        target_embed = self.decoder_embedding(target_text_input)
 
         batch, seq, _ = source_output.shape
         encoder_hidden_size = source_output.shape[2]
@@ -88,6 +86,8 @@ class AttentionNMT(BasicModule):
 
             # dec_prev_hidden: 1, batch, hidden
             dec_prev_hidden = enc_hidden[0].unsqueeze(dim=0)
+            # target_embed: batch,seq,embed
+            target_embed = self.decoder_embedding(target_text_input)
 
             for i in range(self.max_length):
                 input_source = target_embed[:, i, :]
@@ -107,27 +107,25 @@ class AttentionNMT(BasicModule):
             #outs:batch,seq,vocab
             outs = self.class_fc_2( F.relu( self.class_fc_1(class_input)) )
         else:
-            dec_prev_hidden = enc_hidden[0].unsqueeze(dim=0)
-            # dec_prev_hidden: 1, batch, hidden
+            dec_prev_hidden = enc_hidden[0].unsqueeze(dim=0) # dec_prev_hidden: 1, batch, hidden
+
+            input_source = self.decoder_embedding(target_text_input)
+            outs = []
 
             for i in range(self.max_length):
-                input_source = target_embed[:, i, :]
+
 
                 atten_output, dec_output, dec_hidden = self.attention_forward(input_source, dec_prev_hidden, source_output)
 
-                self.atten_outputs[:, i] = atten_output.squeeze(dim=1)
-                self.dec_outputs[:, i] = dec_output.squeeze(dim=1)
+                class_input = t.cat([input_source, atten_output, dec_output], dim=2)
+                pred = self.class_fc_2(F.relu(self.class_fc_1(class_input)))  #pred: batch,seq,vocab: batch, 1, vocab
+
+                pred = t.argmax(pred, dim=-1) #pred: batch, 1, 1
+                outs.append(pred.squeeze(dim = -1).cpu().numpy())
                 dec_prev_hidden = dec_hidden
+                input_source = self.decoder_embedding(pred)
 
-            # class_input:batch, seq, hidden * 4
-            class_input = t.cat([target_embed, self.atten_outputs, self.dec_outputs], dim=2)
 
-            # outs:batch,seq,vocab
-            preds = self.class_fc_2(F.relu(self.class_fc_1(class_input)))
-
-            #outs:batch,seq,1
-            outs = t.argmax(preds, dim=-1)
-            outs = outs.squeeze().cpu().numpy()
 
         return outs
 
