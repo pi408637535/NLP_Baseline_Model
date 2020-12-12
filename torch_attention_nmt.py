@@ -122,6 +122,8 @@ if __name__ == '__main__':
         model.cuda()
         criterion.cuda()
 
+    print(torch.cuda.is_available(), config.cuda)
+
     optimizer = optim.Adam(model.parameters(), lr=config.learning_rate)
     target_id2word = dict([[x[1], x[0]] for x in training_set.target_word2id.items()])
     loss = -1

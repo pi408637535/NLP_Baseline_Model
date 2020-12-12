@@ -79,7 +79,7 @@ class AttentionNMT(BasicModule):
         self.dec_outputs = t.autograd.Variable(t.zeros(batch, seq, decoder_hidden_size))
 
         if is_gpu:
-            self.atten_outputs = self.atten_outpus.cuda()
+            self.atten_outputs = self.atten_outputs.cuda()
             self.dec_outputs = self.dec_outputs.cuda()
 
         if mode == "train":
