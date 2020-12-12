@@ -13,45 +13,53 @@ class AttentionNMT(BasicModule):
                                batch_first=True)
 
         self.decoder_embedding = nn.Embedding(config.target_vocab_size, config.embed_size)
+
+        # f model input size: input size = e+ h * 2, h_0 size = h
         self.decoder = nn.GRU(input_size=config.lstm_size * 2 + config.embed_size,
                                hidden_size=config.lstm_size , num_layers=1,
                                batch_first=True)
 
-        # (encoder) 2*hidden + (decoder) 1*hidden
-        self.attention_fc_1 = nn.Linear(3 * config.lstm_size, 3 * config.lstm_size)
+        # a model input size (encoder) 2*hidden + (decoder) 1*hidden
+        self.attention_fc_1 = nn.Linear(2 * config.lstm_size + 1 * config.lstm_size, 3 * config.lstm_size)
         self.attention_fc_2 = nn.Linear(3 * config.lstm_size, 1)
 
-
+        #g model size :  e + h * 2 + h
         self.class_fc_1 = nn.Linear(config.lstm_size * 2 + config.embed_size + config.lstm_size, config.lstm_size * 2)
         self.class_fc_2 = nn.Linear(config.lstm_size * 2, config.target_vocab_size)
 
         self.max_length = config.max_length
 
-    def attention_forward(self, input_source, dec_prev_hidden, enc_output):
+    def attention_forward(self, input_source, dec_prev_hidden, source_output):
         '''
-        :param input_source: batch,hidden
-        :param dec_prev_hidden: batch, hidden
-        :param enc_output: batch,seq, hidden * 2
+        包含两个模型：a model 和 f model
+        a model：dec_prev_hidden，source_output -> context
+        f model: y_{i-1}, context, s_{i-1} -> s_i
+
+        :param input_source(y_{i-1}): batch, 1, e
+        :param dec_prev_hidden: 1, batch, hidden
+        :param source_output: batch, seq, hidden * 2
         :return:
         '''
-        dec_prev_hidden = dec_prev_hidden.squeeze(dim=0)
-        dec_prev_hidden = dec_prev_hidden.unsqueeze(dim=1).repeat(1, 100, 1)
+        dec_prev_h = dec_prev_hidden.squeeze(dim=0)
+        dec_prev_h = dec_prev_h.unsqueeze(dim=1).repeat(1, 100, 1)
+
+
 
         #score:batch,seq, 1
-        score = self.attention_fc_2( self.attention_fc_1( t.cat([dec_prev_hidden, enc_output], dim=-1) ) )
+        score = self.attention_fc_2( self.attention_fc_1( t.cat([dec_prev_h, source_output], dim=-1) ) )
         score = F.softmax(score, dim= -1)
 
         #score:batch,seq,1
-        context = t.sum(score * enc_output, dim=1) #context:batch,2 * hidden
+        context = t.sum(score * source_output, dim=1) #context: batch,2 * hidden
         input_source = t.unsqueeze(input_source, dim=1)
 
         context = t.unsqueeze(context, dim=1)
 
         #context: batch, 1, hidden * 2
         #input_source:batch, 1, hidden
-        dec_output, dec_hidden = self.decoder(t.cat([input_source, context], dim=-1))
+        dec_output, dec_hidden = self.decoder(t.cat([input_source, context], dim=-1) , dec_prev_hidden)
 
-        return context,dec_output,dec_hidden
+        return context, dec_output, dec_hidden
 
 
 
@@ -78,17 +86,19 @@ class AttentionNMT(BasicModule):
 
         if mode == "train":
 
+            # dec_prev_hidden: 1, batch, hidden
             dec_prev_hidden = enc_hidden[0].unsqueeze(dim=0)
-            #dec_prev_hidden: 1, batch, hidden
 
             for i in range(self.max_length):
                 input_source = target_embed[:, i, :]
 
+                #dec_prev_hidden, source_output-> context,
+                #input_source, context, dec_prev_hidden -> s_i
                 #atten_output:batch, 1, hidden * 2
                 atten_output, dec_output, dec_hidden = self.attention_forward( input_source, dec_prev_hidden, source_output)
 
                 self.atten_outputs[:, i] = atten_output.squeeze(dim=1)
-                self.dec_outputs[:, i] = dec_hidden.squeeze(dim=1)
+                self.dec_outputs[:, i] = dec_output.squeeze(dim=1)
                 dec_prev_hidden = dec_hidden
 
             #class_input:batch, seq, hidden * 4
@@ -106,7 +116,7 @@ class AttentionNMT(BasicModule):
                 atten_output, dec_output, dec_hidden = self.attention_forward(input_source, dec_prev_hidden, source_output)
 
                 self.atten_outputs[:, i] = atten_output.squeeze(dim=1)
-                self.dec_outputs[:, i] = dec_hidden.squeeze(dim=1)
+                self.dec_outputs[:, i] = dec_output.squeeze(dim=1)
                 dec_prev_hidden = dec_hidden
 
             # class_input:batch, seq, hidden * 4
